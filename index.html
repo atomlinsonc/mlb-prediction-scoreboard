@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MLB Diamond Predictions</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700;900&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a1a;
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        /* ── Header ── */
+        .header {
+            text-align: center;
+            padding: 30px 20px 10px;
+            background: linear-gradient(180deg, #1a1a3e 0%, #0a0a1a 100%);
+        }
+        .header h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            letter-spacing: 6px;
+            background: linear-gradient(135deg, #e63946, #f7c948, #e63946);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(0 0 30px rgba(230, 57, 70, 0.3));
+        }
+        .header .subtitle {
+            font-size: 0.95rem;
+            color: #888;
+            margin-top: 4px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        .header .season {
+            font-size: 0.85rem;
+            color: #f7c948;
+            margin-top: 6px;
+            font-weight: 600;
+        }
+
+        /* ── Tab Navigation ── */
+        .tab-bar {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 20px 20px 0;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            background: #1a1a3e;
+            border: 1px solid #2a2a5a;
+            color: #888;
+            padding: 10px 24px;
+            border-radius: 8px 8px 0 0;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover { color: #fff; border-color: #444; }
+        .tab-btn.active {
+            background: #0a0a1a;
+            color: #f7c948;
+            border-color: #f7c948;
+            border-bottom-color: #0a0a1a;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* ── Refresh ── */
+        .refresh-bar {
+            text-align: center;
+            padding: 16px 20px;
+        }
+        .refresh-btn {
+            background: linear-gradient(135deg, #e63946, #c1121f);
+            color: #fff;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+        .refresh-btn:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(230,57,70,0.4); }
+        .refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .last-updated {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 8px;
+        }
+        .status-msg {
+            font-size: 0.85rem;
+            color: #f7c948;
+            margin-top: 6px;
+            min-height: 1.2em;
+        }
+
+        /* ── Scoreboard ── */
+        .scoreboard {
+            max-width: 700px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        .scoreboard-title {
+            text-align: center;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.8rem;
+            letter-spacing: 3px;
+            color: #f7c948;
+            margin-bottom: 16px;
+        }
+        .player-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, #1a1a3e, #12122a);
+            border: 1px solid #2a2a5a;
+            border-radius: 12px;
+            padding: 20px 28px;
+            margin-bottom: 12px;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .player-card.rank-1 {
+            border-color: #f7c948;
+            box-shadow: 0 0 20px rgba(247, 201, 72, 0.15);
+        }
+        .player-card.rank-1::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #f7c948, #e63946);
+        }
+        .player-rank {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.2rem;
+            color: #444;
+            width: 50px;
+        }
+        .player-card.rank-1 .player-rank { color: #f7c948; }
+        .player-card.rank-2 .player-rank { color: #aaa; }
+        .player-card.rank-3 .player-rank { color: #cd7f32; }
+        .player-info { flex: 1; margin-left: 12px; }
+        .player-name {
+            font-size: 1.4rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .player-breakdown {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 4px;
+        }
+        .player-score {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.8rem;
+            letter-spacing: 1px;
+        }
+        .player-card.rank-1 .player-score { color: #4ade80; }
+        .player-card.rank-2 .player-score { color: #94a3b8; }
+        .player-card.rank-3 .player-score { color: #fb923c; }
+        .player-card:not(.rank-1):not(.rank-2):not(.rank-3) .player-score { color: #64748b; }
+        .score-label {
+            font-size: 0.7rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: right;
+        }
+
+        /* ── Standings Detail ── */
+        .standings-section {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        .conference-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.6rem;
+            letter-spacing: 3px;
+            color: #f7c948;
+            text-align: center;
+            margin: 30px 0 16px;
+        }
+        .standings-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        .standings-table thead th {
+            background: #1a1a3e;
+            padding: 12px 10px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            border-bottom: 2px solid #2a2a5a;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .standings-table tbody td {
+            padding: 10px;
+            border-bottom: 1px solid #1a1a3e;
+            font-size: 0.9rem;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .standings-table tbody tr:hover {
+            background: rgba(255,255,255,0.03);
+        }
+        .team-cell {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-align: left;
+        }
+        .team-logo {
+            width: 30px;
+            height: 30px;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+        .team-name {
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .seed-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            min-width: 32px;
+        }
+        .accuracy-good { background: rgba(74, 222, 128, 0.15); color: #4ade80; }
+        .accuracy-ok { background: rgba(250, 204, 21, 0.15); color: #facc15; }
+        .accuracy-bad { background: rgba(248, 113, 113, 0.15); color: #f87171; }
+
+        /* ── Submit Form ── */
+        .submit-section {
+            max-width: 700px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .form-title {
+            text-align: center;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.8rem;
+            letter-spacing: 3px;
+            color: #f7c948;
+            margin-bottom: 8px;
+        }
+        .form-subtitle {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 24px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #ccc;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            background: #12122a;
+            border: 1px solid #2a2a5a;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #f7c948;
+        }
+        .division-label {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.3rem;
+            letter-spacing: 2px;
+            color: #e63946;
+            margin: 24px 0 12px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #2a2a5a;
+        }
+        .drag-list {
+            list-style: none;
+            counter-reset: rank;
+        }
+        .drag-list li {
+            counter-increment: rank;
+            display: flex;
+            align-items: center;
+            background: #12122a;
+            border: 1px solid #2a2a5a;
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 6px;
+            cursor: grab;
+            transition: all 0.15s;
+            user-select: none;
+        }
+        .drag-list li:active { cursor: grabbing; }
+        .drag-list li.dragging {
+            opacity: 0.4;
+            border-color: #f7c948;
+        }
+        .drag-list li.drag-over {
+            border-color: #f7c948;
+            background: #1a1a3e;
+        }
+        .drag-list li::before {
+            content: counter(rank);
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.3rem;
+            color: #f7c948;
+            width: 32px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .drag-list .drag-handle {
+            color: #444;
+            margin-right: 10px;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+        .drag-list .team-logo {
+            width: 24px;
+            height: 24px;
+            margin-right: 10px;
+        }
+        .drag-list .team-label {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .submit-btn {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            margin-top: 30px;
+            background: linear-gradient(135deg, #e63946, #c1121f);
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 800;
+            cursor: pointer;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+        .submit-btn:hover { transform: scale(1.02); box-shadow: 0 0 24px rgba(230,57,70,0.4); }
+        .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .submit-status {
+            text-align: center;
+            margin-top: 12px;
+            font-size: 0.9rem;
+            min-height: 1.4em;
+        }
+        .submit-status.success { color: #4ade80; }
+        .submit-status.error { color: #f87171; }
+
+        /* ── Loading ── */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+            font-size: 1.1rem;
+        }
+        .spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #333;
+            border-top-color: #f7c948;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 12px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Footer ── */
+        .footer {
+            text-align: center;
+            padding: 30px 20px;
+            color: #444;
+            font-size: 0.75rem;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 700px) {
+            .standings-table { font-size: 0.8rem; }
+            .standings-table thead th { padding: 8px 4px; font-size: 0.65rem; }
+            .standings-table tbody td { padding: 8px 4px; }
+            .team-logo { width: 22px; height: 22px; }
+            .team-name { font-size: 0.8rem; }
+            .player-card { padding: 16px 18px; }
+            .player-score { font-size: 2.2rem; }
+            .drag-list li { padding: 8px 10px; }
+            .drag-list .team-label { font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>MLB Diamond Predictions</h1>
+    <div class="subtitle">Season Prediction Scoreboard</div>
+    <div class="season">2025 Season</div>
+</div>
+
+<div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('standings')">Standings</button>
+    <button class="tab-btn" onclick="switchTab('submit')">Submit Predictions</button>
+</div>
+
+<!-- ═══ STANDINGS TAB ═══ -->
+<div class="tab-content active" id="tab-standings">
+    <div class="refresh-bar">
+        <button class="refresh-btn" id="refreshBtn" onclick="fetchStandings()">
+            Refresh Standings
+        </button>
+        <div class="last-updated" id="lastUpdated"></div>
+        <div class="status-msg" id="statusMsg"></div>
+    </div>
+
+    <div class="scoreboard" id="scoreboard">
+        <div class="loading"><div class="spinner"></div><br>Click "Refresh Standings" to load scores</div>
+    </div>
+
+    <div class="standings-section" id="standingsSection">
+        <!-- Populated by JS -->
+    </div>
+</div>
+
+<!-- ═══ SUBMIT TAB ═══ -->
+<div class="tab-content" id="tab-submit">
+    <div class="submit-section">
+        <div class="form-title">Submit Your Predictions</div>
+        <div class="form-subtitle">Drag teams to rank them 1-15 in each league. #1 = best record.</div>
+
+        <div class="form-group">
+            <label for="playerNameInput">Your Name</label>
+            <input type="text" id="playerNameInput" placeholder="Enter your name" maxlength="30" autocomplete="off">
+        </div>
+
+        <div class="division-label">American League</div>
+        <ul class="drag-list" id="alList"></ul>
+
+        <div class="division-label">National League</div>
+        <ul class="drag-list" id="nlList"></ul>
+
+        <button class="submit-btn" id="submitBtn" onclick="submitPredictions()">Submit Predictions</button>
+        <div class="submit-status" id="submitStatus"></div>
+    </div>
+</div>
+
+<div class="footer">
+    MLB Diamond Predictions &middot; Standings via ESPN
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// MLB TEAMS — 15 per league, alphabetical default order
+// ═══════════════════════════════════════════════════════════
+
+const AL_TEAMS = [
+    "Baltimore Orioles", "Boston Red Sox", "Chicago White Sox",
+    "Cleveland Guardians", "Detroit Tigers", "Houston Astros",
+    "Kansas City Royals", "Los Angeles Angels", "Minnesota Twins",
+    "New York Yankees", "Oakland Athletics", "Seattle Mariners",
+    "Tampa Bay Rays", "Texas Rangers", "Toronto Blue Jays"
+];
+
+const NL_TEAMS = [
+    "Arizona Diamondbacks", "Atlanta Braves", "Chicago Cubs",
+    "Cincinnati Reds", "Colorado Rockies", "Los Angeles Dodgers",
+    "Miami Marlins", "Milwaukee Brewers", "New York Mets",
+    "Philadelphia Phillies", "Pittsburgh Pirates", "San Diego Padres",
+    "San Francisco Giants", "St. Louis Cardinals", "Washington Nationals"
+];
+
+const TEAM_ABBR = {
+    "Arizona Diamondbacks": "ARI", "Atlanta Braves": "ATL",
+    "Baltimore Orioles": "BAL", "Boston Red Sox": "BOS",
+    "Chicago Cubs": "CHC", "Chicago White Sox": "CHW",
+    "Cincinnati Reds": "CIN", "Cleveland Guardians": "CLE",
+    "Colorado Rockies": "COL", "Detroit Tigers": "DET",
+    "Houston Astros": "HOU", "Kansas City Royals": "KC",
+    "Los Angeles Angels": "LAA", "Los Angeles Dodgers": "LAD",
+    "Miami Marlins": "MIA", "Milwaukee Brewers": "MIL",
+    "Minnesota Twins": "MIN", "New York Mets": "NYM",
+    "New York Yankees": "NYY", "Oakland Athletics": "OAK",
+    "Philadelphia Phillies": "PHI", "Pittsburgh Pirates": "PIT",
+    "San Diego Padres": "SD", "San Francisco Giants": "SF",
+    "Seattle Mariners": "SEA", "St. Louis Cardinals": "STL",
+    "Tampa Bay Rays": "TB", "Texas Rangers": "TEX",
+    "Toronto Blue Jays": "TOR", "Washington Nationals": "WSH"
+};
+
+// ESPN team IDs for logo fallback
+const ESPN_IDS = {
+    "ARI": 29, "ATL": 15, "BAL": 1, "BOS": 2, "CHC": 16,
+    "CHW": 4, "CIN": 17, "CLE": 5, "COL": 27, "DET": 6,
+    "HOU": 18, "KC": 7, "LAA": 3, "LAD": 19, "MIA": 28,
+    "MIL": 8, "MIN": 9, "NYM": 21, "NYY": 10, "OAK": 11,
+    "PHI": 22, "PIT": 23, "SD": 25, "SF": 26, "SEA": 12,
+    "STL": 24, "TB": 30, "TEX": 13, "TOR": 14, "WSH": 20
+};
+
+// Name normalization for ESPN mismatches
+const NAME_NORMALIZE = {
+    "Athletics": "Oakland Athletics"
+};
+
+function normalizeName(name) {
+    return NAME_NORMALIZE[name] || name;
+}
+
+let teamLogos = {};
+
+function teamLogo(teamName) {
+    if (teamLogos[teamName]) return teamLogos[teamName];
+    const abbr = TEAM_ABBR[teamName];
+    if (!abbr) return '';
+    return `https://a.espncdn.com/i/teamlogos/mlb/500/${abbr.toLowerCase()}.png`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// PLAYER PREDICTIONS — stored in localStorage via jsonbin
+// ═══════════════════════════════════════════════════════════
+
+// Using localStorage as primary store with jsonbin.io sync
+const STORAGE_KEY = 'mlbDiamondPlayers';
+
+let PLAYERS = {};
+
+function loadPlayers() {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+        try { PLAYERS = JSON.parse(saved); } catch(e) { PLAYERS = {}; }
+    }
+}
+
+function savePlayers() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(PLAYERS));
+}
+
+// ═══════════════════════════════════════════════════════════
+// JSONBLOB — free cloud storage for predictions (no API key)
+// ═══════════════════════════════════════════════════════════
+
+const JSONBLOB_ID = '019c62d4-a8b5-72cf-a0b1-1d5b41f76ba0';
+
+async function syncFromCloud() {
+    try {
+        const resp = await fetch(`https://jsonblob.com/api/jsonBlob/${JSONBLOB_ID}`);
+        if (!resp.ok) throw new Error(`JSONBlob returned ${resp.status}`);
+        const data = await resp.json();
+        if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+            PLAYERS = data;
+            savePlayers();
+        }
+    } catch(e) {
+        console.warn('Cloud sync failed, using local data:', e);
+    }
+}
+
+async function syncToCloud() {
+    try {
+        await fetch(`https://jsonblob.com/api/jsonBlob/${JSONBLOB_ID}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(PLAYERS)
+        });
+    } catch(e) {
+        console.warn('Cloud save failed:', e);
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+// STANDINGS FETCHING (ESPN API)
+// ═══════════════════════════════════════════════════════════
+
+let currentStandings = { al: {}, nl: {} };
+
+async function fetchStandings() {
+    const btn = document.getElementById('refreshBtn');
+    const status = document.getElementById('statusMsg');
+    btn.disabled = true;
+    status.textContent = 'Fetching standings from ESPN...';
+
+    try {
+        const url = 'https://site.api.espn.com/apis/v2/sports/baseball/mlb/standings?season=2025';
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error(`ESPN API returned ${resp.status}`);
+        const data = await resp.json();
+        parseESPN(data);
+        status.textContent = '';
+    } catch (err) {
+        console.error('ESPN API failed:', err);
+        status.textContent = 'Could not fetch standings. Check your connection and try again.';
+        btn.disabled = false;
+        return;
+    }
+
+    const now = new Date();
+    document.getElementById('lastUpdated').textContent =
+        `Last updated: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+    btn.disabled = false;
+
+    localStorage.setItem('mlbDiamondStandings', JSON.stringify(currentStandings));
+    localStorage.setItem('mlbDiamondLogos', JSON.stringify(teamLogos));
+    localStorage.setItem('mlbDiamondTimestamp', now.toISOString());
+
+    renderAll();
+}
+
+function parseESPN(data) {
+    const al = {};
+    const nl = {};
+
+    for (const league of data.children) {
+        const isAL = league.abbreviation === 'AL' || league.name.includes('American');
+        const bucket = isAL ? al : nl;
+
+        for (const entry of league.standings.entries) {
+            const rawName = entry.team.displayName;
+            const teamName = normalizeName(rawName);
+            const seedStat = entry.stats.find(s => s.name === 'playoffSeed');
+            const seed = seedStat ? seedStat.value : null;
+
+            if (seed !== null) bucket[teamName] = seed;
+
+            if (entry.team.logos && entry.team.logos.length > 0) {
+                teamLogos[teamName] = entry.team.logos[0].href;
+            }
+        }
+    }
+
+    currentStandings = { al, nl };
+}
+
+// ═══════════════════════════════════════════════════════════
+// SCORING ENGINE
+// ═══════════════════════════════════════════════════════════
+
+function calcAccuracy(predictedArray, actualStandings) {
+    const totalTeams = 15;
+    let sumAccuracy = 0;
+    let counted = 0;
+
+    predictedArray.forEach((team, idx) => {
+        const predictedSeed = idx + 1;
+        const actualSeed = actualStandings[team];
+        if (actualSeed === undefined) return;
+
+        const diff = Math.abs(predictedSeed - actualSeed);
+        const maxDiff = totalTeams - 1;
+        const accuracy = ((maxDiff - diff) / maxDiff) * 100;
+        sumAccuracy += accuracy;
+        counted++;
+    });
+
+    return counted > 0 ? sumAccuracy / counted : 0;
+}
+
+function getPlayerScores() {
+    const scores = [];
+
+    for (const [name, preds] of Object.entries(PLAYERS)) {
+        const alAcc = calcAccuracy(preds.al, currentStandings.al);
+        const nlAcc = calcAccuracy(preds.nl, currentStandings.nl);
+        const combined = (alAcc + nlAcc) / 2;
+
+        scores.push({ name, al: alAcc, nl: nlAcc, combined });
+    }
+
+    scores.sort((a, b) => b.combined - a.combined);
+    return scores;
+}
+
+function getTeamAccuracy(team, predictedSeed, league) {
+    const actual = currentStandings[league][team];
+    if (actual === undefined) return null;
+    const diff = Math.abs(predictedSeed - actual);
+    const maxDiff = 14;
+    return ((maxDiff - diff) / maxDiff) * 100;
+}
+
+// ═══════════════════════════════════════════════════════════
+// RENDERING
+// ═══════════════════════════════════════════════════════════
+
+function renderAll() {
+    renderScoreboard();
+    renderStandings();
+}
+
+function renderScoreboard() {
+    const scores = getPlayerScores();
+    const container = document.getElementById('scoreboard');
+
+    if (scores.length === 0) {
+        container.innerHTML = '<div class="loading">No predictions submitted yet. Be the first!</div>';
+        return;
+    }
+
+    const hasStandings = Object.keys(currentStandings.al).length > 0;
+
+    if (!hasStandings) {
+        container.innerHTML = '<div class="loading"><div class="spinner"></div><br>Click "Refresh Standings" to load scores</div>';
+        return;
+    }
+
+    let html = '<div class="scoreboard-title">Leaderboard</div>';
+
+    scores.forEach((p, i) => {
+        const rank = i + 1;
+        const rankClass = rank <= 3 ? `rank-${rank}` : '';
+        html += `
+        <div class="player-card ${rankClass}">
+            <div class="player-rank">#${rank}</div>
+            <div class="player-info">
+                <div class="player-name">${escapeHtml(p.name)}</div>
+                <div class="player-breakdown">AL: ${p.al.toFixed(1)}% &middot; NL: ${p.nl.toFixed(1)}%</div>
+            </div>
+            <div>
+                <div class="player-score">${p.combined.toFixed(1)}%</div>
+                <div class="score-label">Accuracy</div>
+            </div>
+        </div>`;
+    });
+
+    container.innerHTML = html;
+}
+
+function renderStandings() {
+    const container = document.getElementById('standingsSection');
+    const playerNames = Object.keys(PLAYERS);
+
+    if (playerNames.length === 0 || Object.keys(currentStandings.al).length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+
+    let html = '';
+
+    ['al', 'nl'].forEach(league => {
+        const leagueLabel = league === 'al' ? 'American League' : 'National League';
+
+        const actualTeams = Object.entries(currentStandings[league])
+            .sort((a, b) => a[1] - b[1]);
+
+        html += `<div class="conference-title">${leagueLabel}</div>`;
+        html += `<table class="standings-table"><thead><tr>
+            <th style="text-align:left;padding-left:14px">Seed</th>
+            <th style="text-align:left">Team</th>`;
+
+        playerNames.forEach(name => {
+            html += `<th>${escapeHtml(name)}</th>`;
+        });
+
+        html += `</tr></thead><tbody>`;
+
+        actualTeams.forEach(([team, actualSeed]) => {
+            const logo = teamLogo(team);
+            const logoImg = logo ? `<img class="team-logo" src="${logo}" alt="" onerror="this.style.display='none'">` : '';
+
+            html += `<tr>
+                <td style="text-align:left;padding-left:14px;font-weight:700;color:#f7c948;">${actualSeed}</td>
+                <td><div class="team-cell">${logoImg}<span class="team-name">${team}</span></div></td>`;
+
+            playerNames.forEach(player => {
+                const preds = PLAYERS[player][league];
+                const predictedSeed = preds.indexOf(team) + 1;
+                const accuracy = getTeamAccuracy(team, predictedSeed, league);
+
+                let cls = '';
+                if (accuracy !== null) {
+                    if (accuracy >= 78.5) cls = 'accuracy-good';
+                    else if (accuracy >= 57.1) cls = 'accuracy-ok';
+                    else cls = 'accuracy-bad';
+                }
+
+                html += `<td><span class="seed-badge ${cls}">${predictedSeed || '?'}</span></td>`;
+            });
+
+            html += `</tr>`;
+        });
+
+        html += `</tbody></table>`;
+    });
+
+    container.innerHTML = html;
+}
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+// ═══════════════════════════════════════════════════════════
+// TAB SWITCHING
+// ═══════════════════════════════════════════════════════════
+
+function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+
+    document.getElementById(`tab-${tab}`).classList.add('active');
+    event.target.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════════════
+// DRAG & DROP RANKING
+// ═══════════════════════════════════════════════════════════
+
+function initDragList(listId, teams) {
+    const ul = document.getElementById(listId);
+    ul.innerHTML = '';
+
+    teams.forEach(team => {
+        const li = document.createElement('li');
+        li.dataset.team = team;
+        li.draggable = true;
+
+        const logo = teamLogo(team);
+        li.innerHTML = `
+            <span class="drag-handle">&#9776;</span>
+            ${logo ? `<img class="team-logo" src="${logo}" alt="" onerror="this.style.display='none'">` : ''}
+            <span class="team-label">${team}</span>
+        `;
+
+        // Drag events
+        li.addEventListener('dragstart', handleDragStart);
+        li.addEventListener('dragend', handleDragEnd);
+        li.addEventListener('dragover', handleDragOver);
+        li.addEventListener('dragenter', handleDragEnter);
+        li.addEventListener('dragleave', handleDragLeave);
+        li.addEventListener('drop', handleDrop);
+
+        // Touch events for mobile
+        li.addEventListener('touchstart', handleTouchStart, { passive: false });
+        li.addEventListener('touchmove', handleTouchMove, { passive: false });
+        li.addEventListener('touchend', handleTouchEnd);
+
+        ul.appendChild(li);
+    });
+}
+
+let dragSrcEl = null;
+
+function handleDragStart(e) {
+    dragSrcEl = this;
+    this.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', '');
+}
+
+function handleDragEnd() {
+    this.classList.remove('dragging');
+    document.querySelectorAll('.drag-list li').forEach(li => li.classList.remove('drag-over'));
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+}
+
+function handleDragEnter(e) {
+    e.preventDefault();
+    if (this !== dragSrcEl && this.parentNode === dragSrcEl.parentNode) {
+        this.classList.add('drag-over');
+    }
+}
+
+function handleDragLeave() {
+    this.classList.remove('drag-over');
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (this !== dragSrcEl && this.parentNode === dragSrcEl.parentNode) {
+        const list = this.parentNode;
+        const items = [...list.children];
+        const fromIdx = items.indexOf(dragSrcEl);
+        const toIdx = items.indexOf(this);
+
+        if (fromIdx < toIdx) {
+            list.insertBefore(dragSrcEl, this.nextSibling);
+        } else {
+            list.insertBefore(dragSrcEl, this);
+        }
+    }
+    this.classList.remove('drag-over');
+}
+
+// ── Touch support for mobile ──
+let touchStartY = 0;
+let touchEl = null;
+let touchClone = null;
+
+function handleTouchStart(e) {
+    touchEl = this;
+    touchStartY = e.touches[0].clientY;
+    this.classList.add('dragging');
+
+    // Create floating clone
+    touchClone = this.cloneNode(true);
+    touchClone.style.position = 'fixed';
+    touchClone.style.zIndex = '9999';
+    touchClone.style.pointerEvents = 'none';
+    touchClone.style.opacity = '0.8';
+    touchClone.style.width = this.offsetWidth + 'px';
+    touchClone.style.left = this.getBoundingClientRect().left + 'px';
+    touchClone.style.top = e.touches[0].clientY - 20 + 'px';
+    document.body.appendChild(touchClone);
+}
+
+function handleTouchMove(e) {
+    e.preventDefault();
+    if (!touchEl || !touchClone) return;
+
+    const y = e.touches[0].clientY;
+    touchClone.style.top = y - 20 + 'px';
+
+    const list = touchEl.parentNode;
+    const items = [...list.children];
+
+    items.forEach(item => {
+        item.classList.remove('drag-over');
+        const rect = item.getBoundingClientRect();
+        if (y > rect.top && y < rect.bottom && item !== touchEl) {
+            item.classList.add('drag-over');
+        }
+    });
+}
+
+function handleTouchEnd(e) {
+    if (!touchEl) return;
+    touchEl.classList.remove('dragging');
+
+    if (touchClone) {
+        touchClone.remove();
+        touchClone = null;
+    }
+
+    const list = touchEl.parentNode;
+    const items = [...list.children];
+    const target = items.find(item => item.classList.contains('drag-over'));
+
+    if (target) {
+        const fromIdx = items.indexOf(touchEl);
+        const toIdx = items.indexOf(target);
+
+        if (fromIdx < toIdx) {
+            list.insertBefore(touchEl, target.nextSibling);
+        } else {
+            list.insertBefore(touchEl, target);
+        }
+        target.classList.remove('drag-over');
+    }
+
+    touchEl = null;
+}
+
+// ═══════════════════════════════════════════════════════════
+// SUBMIT PREDICTIONS
+// ═══════════════════════════════════════════════════════════
+
+async function submitPredictions() {
+    const nameInput = document.getElementById('playerNameInput');
+    const statusEl = document.getElementById('submitStatus');
+    const btn = document.getElementById('submitBtn');
+
+    const name = nameInput.value.trim();
+
+    if (!name) {
+        statusEl.textContent = 'Please enter your name.';
+        statusEl.className = 'submit-status error';
+        return;
+    }
+
+    if (name.length > 30) {
+        statusEl.textContent = 'Name must be 30 characters or fewer.';
+        statusEl.className = 'submit-status error';
+        return;
+    }
+
+    // Get ordered teams from drag lists
+    const alPreds = [...document.getElementById('alList').children].map(li => li.dataset.team);
+    const nlPreds = [...document.getElementById('nlList').children].map(li => li.dataset.team);
+
+    if (alPreds.length !== 15 || nlPreds.length !== 15) {
+        statusEl.textContent = 'Something went wrong. Please refresh and try again.';
+        statusEl.className = 'submit-status error';
+        return;
+    }
+
+    btn.disabled = true;
+    statusEl.textContent = 'Submitting...';
+    statusEl.className = 'submit-status';
+
+    // Save prediction
+    PLAYERS[name] = { al: alPreds, nl: nlPreds };
+    savePlayers();
+
+    // Sync to cloud
+    await syncToCloud();
+
+    statusEl.textContent = `Predictions saved for ${name}! Switch to the Standings tab to see your score.`;
+    statusEl.className = 'submit-status success';
+    btn.disabled = false;
+
+    // Re-render standings if data is loaded
+    if (Object.keys(currentStandings.al).length > 0) {
+        renderAll();
+    }
+}
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+
+(async function init() {
+    // Load local data first
+    loadPlayers();
+
+    // Init drag lists
+    initDragList('alList', AL_TEAMS);
+    initDragList('nlList', NL_TEAMS);
+
+    // Load cached standings
+    const cached = localStorage.getItem('mlbDiamondStandings');
+    const cachedLogos = localStorage.getItem('mlbDiamondLogos');
+    const timestamp = localStorage.getItem('mlbDiamondTimestamp');
+
+    if (cachedLogos) {
+        try { teamLogos = JSON.parse(cachedLogos); } catch(e) {}
+    }
+
+    if (cached) {
+        try {
+            currentStandings = JSON.parse(cached);
+            if (timestamp) {
+                const d = new Date(timestamp);
+                document.getElementById('lastUpdated').textContent =
+                    `Last updated: ${d.toLocaleDateString()} ${d.toLocaleTimeString()} (cached)`;
+            }
+            renderAll();
+        } catch (e) {
+            console.warn('Could not load cached standings', e);
+        }
+    }
+
+    // Sync predictions from cloud
+    await syncFromCloud();
+    if (Object.keys(currentStandings.al).length > 0) {
+        renderAll();
+    }
+})();
+</script>
+
+</body>
+</html>
