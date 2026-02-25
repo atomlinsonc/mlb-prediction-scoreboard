@@ -630,7 +630,14 @@ async function fetchStandings() {
         if (!resp.ok) throw new Error(`ESPN API returned ${resp.status}`);
         const data = await resp.json();
         parseESPN(data);
-        status.textContent = '';
+
+        // Check if we got regular season data
+        const leagueAbbrs = data.children.map(c => c.abbreviation);
+        if (!leagueAbbrs.includes('AL') && !leagueAbbrs.includes('NL')) {
+            status.textContent = 'Regular season hasn\'t started yet — showing spring training logos.';
+        } else {
+            status.textContent = '';
+        }
     } catch (err) {
         console.error('ESPN API failed:', err);
         status.textContent = 'Could not fetch standings. Check your connection and try again.';
@@ -653,6 +660,25 @@ async function fetchStandings() {
 function parseESPN(data) {
     const al = {};
     const nl = {};
+
+    // Check if the API is returning regular season (AL/NL) or spring training (CAC/GPF)
+    const leagueAbbrs = data.children.map(c => c.abbreviation);
+    const isRegularSeason = leagueAbbrs.includes('AL') || leagueAbbrs.includes('NL');
+
+    if (!isRegularSeason) {
+        // Pre-season / spring training — collect logos but no standings
+        for (const league of data.children) {
+            for (const entry of league.standings.entries) {
+                const rawName = entry.team.displayName;
+                const teamName = normalizeName(rawName);
+                if (entry.team.logos && entry.team.logos.length > 0) {
+                    teamLogos[teamName] = entry.team.logos[0].href;
+                }
+            }
+        }
+        currentStandings = { al: {}, nl: {} };
+        return;
+    }
 
     for (const league of data.children) {
         const isAL = league.abbreviation === 'AL' || league.name.includes('American');
@@ -732,10 +758,10 @@ function renderAll() {
 }
 
 function renderScoreboard() {
-    const scores = getPlayerScores();
     const container = document.getElementById('scoreboard');
+    const playerNames = Object.keys(PLAYERS);
 
-    if (scores.length === 0) {
+    if (playerNames.length === 0) {
         container.innerHTML = '<div class="loading">No predictions submitted yet. Be the first!</div>';
         return;
     }
@@ -743,9 +769,31 @@ function renderScoreboard() {
     const hasStandings = Object.keys(currentStandings.al).length > 0;
 
     if (!hasStandings) {
-        container.innerHTML = '<div class="loading"><div class="spinner"></div><br>Click "Refresh Standings" to load scores</div>';
+        // Pre-season: show who has submitted predictions, no scores yet
+        let html = '<div class="scoreboard-title">Predictions Submitted</div>';
+        html += '<div style="text-align:center;color:#f7c948;margin-bottom:16px;font-size:0.9rem;">The regular season hasn\'t started yet. Scores will appear once it begins!</div>';
+
+        playerNames.forEach((name, i) => {
+            const submitted = PLAYERS[name].submittedAt ? new Date(PLAYERS[name].submittedAt).toLocaleDateString() : '';
+            html += `
+            <div class="player-card">
+                <div class="player-rank">${i + 1}</div>
+                <div class="player-info">
+                    <div class="player-name">${escapeHtml(name)}</div>
+                    <div class="player-breakdown">Submitted${submitted ? ' ' + submitted : ''}</div>
+                </div>
+                <div>
+                    <div class="player-score" style="font-size:1rem;color:#888;">—</div>
+                    <div class="score-label">Waiting</div>
+                </div>
+            </div>`;
+        });
+
+        container.innerHTML = html;
         return;
     }
+
+    const scores = getPlayerScores();
 
     let html = '<div class="scoreboard-title">Leaderboard</div>';
 
@@ -1093,9 +1141,7 @@ async function submitPredictions() {
 
     // Sync predictions from cloud
     await syncFromCloud();
-    if (Object.keys(currentStandings.al).length > 0) {
-        renderAll();
-    }
+    renderAll();
 })();
 </script>
 
