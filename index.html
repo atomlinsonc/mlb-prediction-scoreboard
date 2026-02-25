@@ -433,7 +433,7 @@
 <div class="header">
     <h1>MLB Diamond Predictions</h1>
     <div class="subtitle">Season Prediction Scoreboard</div>
-    <div class="season">2025 Season</div>
+    <div class="season">2026 Season</div>
 </div>
 
 <div class="tab-bar">
@@ -574,15 +574,15 @@ function savePlayers() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// JSONBLOB — free cloud storage for predictions (no API key)
+// API — Render-hosted backend for shared predictions
 // ═══════════════════════════════════════════════════════════
 
-const JSONBLOB_ID = '019c62d4-a8b5-72cf-a0b1-1d5b41f76ba0';
+const API_URL = 'https://mlb-predictions-api.onrender.com';
 
 async function syncFromCloud() {
     try {
-        const resp = await fetch(`https://jsonblob.com/api/jsonBlob/${JSONBLOB_ID}`);
-        if (!resp.ok) throw new Error(`JSONBlob returned ${resp.status}`);
+        const resp = await fetch(`${API_URL}/predictions`);
+        if (!resp.ok) throw new Error(`API returned ${resp.status}`);
         const data = await resp.json();
         if (data && typeof data === 'object' && Object.keys(data).length > 0) {
             PLAYERS = data;
@@ -593,15 +593,22 @@ async function syncFromCloud() {
     }
 }
 
-async function syncToCloud() {
+async function syncToCloud(name, al, nl) {
     try {
-        await fetch(`https://jsonblob.com/api/jsonBlob/${JSONBLOB_ID}`, {
-            method: 'PUT',
+        const resp = await fetch(`${API_URL}/predictions`, {
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(PLAYERS)
+            body: JSON.stringify({ name, al, nl })
         });
+        if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            throw new Error(err.error || `API returned ${resp.status}`);
+        }
+        // Re-fetch all predictions to get the complete set
+        await syncFromCloud();
     } catch(e) {
         console.warn('Cloud save failed:', e);
+        throw e;
     }
 }
 
@@ -618,7 +625,7 @@ async function fetchStandings() {
     status.textContent = 'Fetching standings from ESPN...';
 
     try {
-        const url = 'https://site.api.espn.com/apis/v2/sports/baseball/mlb/standings?season=2025';
+        const url = 'https://site.api.espn.com/apis/v2/sports/baseball/mlb/standings?season=2026';
         const resp = await fetch(url);
         if (!resp.ok) throw new Error(`ESPN API returned ${resp.status}`);
         const data = await resp.json();
@@ -1031,15 +1038,16 @@ async function submitPredictions() {
     statusEl.textContent = 'Submitting...';
     statusEl.className = 'submit-status';
 
-    // Save prediction
-    PLAYERS[name] = { al: alPreds, nl: nlPreds };
-    savePlayers();
+    // Save to cloud backend
+    try {
+        await syncToCloud(name, alPreds, nlPreds);
+        statusEl.textContent = `Predictions saved for ${name}! Switch to the Standings tab to see your score.`;
+        statusEl.className = 'submit-status success';
+    } catch(e) {
+        statusEl.textContent = `Failed to save: ${e.message}. Please try again.`;
+        statusEl.className = 'submit-status error';
+    }
 
-    // Sync to cloud
-    await syncToCloud();
-
-    statusEl.textContent = `Predictions saved for ${name}! Switch to the Standings tab to see your score.`;
-    statusEl.className = 'submit-status success';
     btn.disabled = false;
 
     // Re-render standings if data is loaded
