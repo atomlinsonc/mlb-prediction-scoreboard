@@ -584,7 +584,7 @@ async function syncFromCloud() {
         const resp = await fetch(`${API_URL}/predictions`);
         if (!resp.ok) throw new Error(`API returned ${resp.status}`);
         const data = await resp.json();
-        if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+        if (data && typeof data === 'object') {
             PLAYERS = data;
             savePlayers();
         }
@@ -1097,11 +1097,7 @@ async function submitPredictions() {
     }
 
     btn.disabled = false;
-
-    // Re-render standings if data is loaded
-    if (Object.keys(currentStandings.al).length > 0) {
-        renderAll();
-    }
+    renderAll();
 }
 
 // ═══════════════════════════════════════════════════════════
