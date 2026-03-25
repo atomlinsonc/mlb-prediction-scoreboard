@@ -1,1 +1,39 @@
-{}
+{
+  "Keaton": {
+    "al": [
+      "Detroit Tigers",
+      "Toronto Blue Jays",
+      "Houston Astros",
+      "Boston Red Sox",
+      "Seattle Mariners",
+      "New York Yankees",
+      "Kansas City Royals",
+      "Texas Rangers",
+      "Baltimore Orioles",
+      "Cleveland Guardians",
+      "Oakland Athletics",
+      "Tampa Bay Rays",
+      "Los Angeles Angels",
+      "Minnesota Twins",
+      "Chicago White Sox"
+    ],
+    "nl": [
+      "Los Angeles Dodgers",
+      "New York Mets",
+      "Chicago Cubs",
+      "Philadelphia Phillies",
+      "San Diego Padres",
+      "Atlanta Braves",
+      "Arizona Diamondbacks",
+      "Cincinnati Reds",
+      "San Francisco Giants",
+      "Pittsburgh Pirates",
+      "Milwaukee Brewers",
+      "Miami Marlins",
+      "Washington Nationals",
+      "St. Louis Cardinals",
+      "Colorado Rockies"
+    ],
+    "submittedAt": "2026-03-25T02:30:47.890Z"
+  }
+}
