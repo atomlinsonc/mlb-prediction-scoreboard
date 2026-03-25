@@ -35,5 +35,42 @@
       "Colorado Rockies"
     ],
     "submittedAt": "2026-03-25T02:30:47.890Z"
+  },
+  "Taylor": {
+    "al": [
+      "Seattle Mariners",
+      "Toronto Blue Jays",
+      "New York Yankees",
+      "Kansas City Royals",
+      "Houston Astros",
+      "Detroit Tigers",
+      "Baltimore Orioles",
+      "Boston Red Sox",
+      "Texas Rangers",
+      "Oakland Athletics",
+      "Tampa Bay Rays",
+      "Minnesota Twins",
+      "Cleveland Guardians",
+      "Chicago White Sox",
+      "Los Angeles Angels"
+    ],
+    "nl": [
+      "Los Angeles Dodgers",
+      "Chicago Cubs",
+      "Atlanta Braves",
+      "New York Mets",
+      "Philadelphia Phillies",
+      "Milwaukee Brewers",
+      "San Diego Padres",
+      "San Francisco Giants",
+      "Pittsburgh Pirates",
+      "Arizona Diamondbacks",
+      "Cincinnati Reds",
+      "Miami Marlins",
+      "St. Louis Cardinals",
+      "Washington Nationals",
+      "Colorado Rockies"
+    ],
+    "submittedAt": "2026-03-25T03:11:30.863Z"
   }
 }
