@@ -109,5 +109,42 @@
       "Washington Nationals"
     ],
     "submittedAt": "2026-03-25T03:29:45.124Z"
+  },
+  "Austin": {
+    "al": [
+      "New York Yankees",
+      "Seattle Mariners",
+      "Toronto Blue Jays",
+      "Boston Red Sox",
+      "Houston Astros",
+      "Baltimore Orioles",
+      "Detroit Tigers",
+      "Texas Rangers",
+      "Kansas City Royals",
+      "Cleveland Guardians",
+      "Tampa Bay Rays",
+      "Oakland Athletics",
+      "Minnesota Twins",
+      "Los Angeles Angels",
+      "Chicago White Sox"
+    ],
+    "nl": [
+      "Los Angeles Dodgers",
+      "New York Mets",
+      "Philadelphia Phillies",
+      "Chicago Cubs",
+      "Atlanta Braves",
+      "Milwaukee Brewers",
+      "San Diego Padres",
+      "San Francisco Giants",
+      "Arizona Diamondbacks",
+      "Cincinnati Reds",
+      "Pittsburgh Pirates",
+      "Miami Marlins",
+      "St. Louis Cardinals",
+      "Washington Nationals",
+      "Colorado Rockies"
+    ],
+    "submittedAt": "2026-03-25T04:18:06.028Z"
   }
 }
